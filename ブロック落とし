@@ -27,10 +27,10 @@ public class Sample001 {
         // ブロックが落ちる処理
         // 0は何もない。1ならブロックがある
         for (int a = 0; a < N; a++) {
-        	System.out.println("あと" + (N - a) + "個");
-
         	
+        	System.out.println("あと" + (N - a) + "個");
         	System.out.print("タテ幅とヨコ幅の合計を入力:");
+        	
         	int heightPlusWidth = sc.nextInt();
             int heightBlock = 1 + r.nextInt(heightPlusWidth - 1);
             int widthBlock = heightPlusWidth - heightBlock;
@@ -47,9 +47,6 @@ public class Sample001 {
             int distance = 1 + r.nextInt(width - widthBlock);
         	System.out.println("落ちたブロックのサイズは" + heightBlock + "×" + widthBlock + "、左端からの距離は" + distance + "でした");
 
-            
-            
-            
             // blockメソッドでブロックが落ちる処理をする
             try {
             	block(field, height, width, area, heightBlock, widthBlock, distance);
