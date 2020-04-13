@@ -1,48 +1,79 @@
-package blockman;
+import java.util.Random;
 import java.util.Scanner;
-
 
 public class Sample001 {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
+        Random r = new Random();
 
-        System.out.print("フィールドのタテ幅は：");
-        int height = sc.nextInt();
-        System.out.print("フィールドのヨコ幅は：");
-        int width = sc.nextInt();
-        System.out.print("落ちるブロックの個数は：");
-        int N = sc.nextInt();
-
-        // areaはタテ×ヨコでフィールドの大きさ。
-        // それを配列fieldに代入して疑似的なフィールドを作る。
+        int height = 13;
+        int width = 10;
+        int N = 10;
+        
+        // areaはタテ×ヨコでフィールドの面積
+        // それを配列fieldに代入して疑似的なゲームのフィールドを作る
         int area = height * width;
         int field[] = new int[area];
+        
+        System.out.println("ルール説明:");
+        System.out.println(height + "×" + width + "マスのフィールドにブロックが" + N + "個落ちます。");
+        System.out.println("フィールドの面積の半分以上をブロックで埋められたらクリアですが、");
+        System.out.println("積み上がったブロックがフィールドの高さを超えたらゲームオーバーです。");
+        System.out.println("ブロックのタテヨコの長さの合計だけは指定できますが、それ以外はランダムに決まります。");
+        
+        // 一旦空のフィールドを表示する
+        output(field, width);
 
-        // ブロックが落ちる処理。
-        // 0は何もない。1ならブロックがある。
+        // ブロックが落ちる処理
+        // 0は何もない。1ならブロックがある
         for (int a = 0; a < N; a++) {
-        	System.out.print(a + 1 + "個目のブロックのタテ幅は：");
-            int heightBlock = sc.nextInt();
-            System.out.print(a + 1 + "個目のブロックのヨコ幅は：");
-            int widthBlock = sc.nextInt();
-            System.out.print("左端からブロックまでの距離は：");
-            int distance = sc.nextInt();
+        	System.out.println("あと" + (N - a) + "個");
 
-            block(field, height, width, area, heightBlock, widthBlock, distance);
+        	
+        	System.out.print("タテ幅とヨコ幅の合計を入力:");
+        	int heightPlusWidth = sc.nextInt();
+            int heightBlock = 1 + r.nextInt(heightPlusWidth - 1);
+            int widthBlock = heightPlusWidth - heightBlock;
+            int distance = 1 + r.nextInt(width - widthBlock);
+        	System.out.println("落ちたブロックのサイズは" + heightBlock + "×" + widthBlock + "、左端からの距離は" + distance + "でした");
+
+            
+            // 落ちるブロックがフィールドに入り切らない場合。
+            if (widthBlock > width) {
+            	System.out.println("\nブロックの横幅がフィールドを超えました。ゲームオーバーです。");
+            	break;
+            } else if (heightBlock > height) {
+            	System.out.println("\nブロックの高さがフィールドを超えました。ゲームオーバーです。");
+            	break;
+            }
+            
+            // blockメソッドでブロックが落ちる処理をする
+            try {
+            	block(field, height, width, area, heightBlock, widthBlock, distance);
+            } catch (ArrayIndexOutOfBoundsException e) {
+            	output(field, width);
+            	System.out.println("\n積み上がったブロックがフィールドの高さを超えました。ゲームオーバーです。");
+            	break;
+            }
+            
+            // ブロックを落とすたびにフィールドの状態を出力する
             output(field, width);
-            System.out.println("");
+            
+            // N回ブロックを落とし切れたら結果発表をする
+            if (a == N - 1) {
+                gameResult(field, area);
 
+            }
+            
         }
-
-        //最終的な出力
-        //output(field, width);
 
     }
 
     public static void block(int[] field, int height, int width, int area, int heightBlock, int widthBlock, int distance) {
-        // areaの数だけ繰り返す処理。
+        // 検出しても何も無かった場合noBlockに1を足す。
         int noBlock = 0;
-
+        
+        // areaの数だけ繰り返す処理。
         for (int i = 0; i < area; i++) {
 
             // ブロックが落ちない場所の判定をスキップする処理
@@ -56,14 +87,13 @@ public class Sample001 {
 
 
             if (field[i] == 1) {
-                // ブロックの上にブロックが重なる。落ちきる途中でブロックを検出した場合。
+                // ブロックの上にブロックが重なるメソッド。落ちきる途中でブロックを検出した場合。
                 kasanaruBlock(field, heightBlock, widthBlock, i, distance, width, height);
                 break;
             } else if (field[i] == 0) {
-                // 検出しても何も無かった場合noBlockに1を足す。
             	noBlock++;
             	if (widthBlock * height == noBlock) {
-            		// 床にブロックが落ちる。落ちきるまでブロックが検出されなかった場合。
+            		// 床にブロックが落ちるメソッド。落ちきるまでブロックが検出されなかった場合。
             		otiruBlock(field, heightBlock, widthBlock, i, distance, width, height);
             		break;
             	}
@@ -73,6 +103,7 @@ public class Sample001 {
         }
     }
 
+    
     public static void kasanaruBlock(int[] field, int heightBlock, int widthBlock, int i, int distance, int width, int height) {
 
         int q = 0;
@@ -120,6 +151,22 @@ public class Sample001 {
                 System.out.println("");
             }
         }
+        
+        System.out.println("-----------------------------------\n");
+    }
+    
+    public static void gameResult(int[] field, int area) {
+        int sumBlock = 0;
+    	for (int k = 0; k < field.length; k++) {
+            sumBlock += field[k];
+        }
+    	double half = area / 2;
+    	if (sumBlock > half) {
+    		System.out.println(area + "マス中" + sumBlock + "個がブロックです。\n半分以上埋められたのでクリアです！");
+    	} else {
+    		System.out.println(area + "マス中" + sumBlock + "個がブロックです。\n半分以上埋められていないのでゲームオーバーです。");
+    	}
+        
     }
 
 
