@@ -1,0 +1,126 @@
+package blockman;
+import java.util.Scanner;
+
+
+public class Sample001 {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("フィールドのタテ幅は：");
+        int height = sc.nextInt();
+        System.out.print("フィールドのヨコ幅は：");
+        int width = sc.nextInt();
+        System.out.print("落ちるブロックの個数は：");
+        int N = sc.nextInt();
+
+        // areaはタテ×ヨコでフィールドの大きさ。
+        // それを配列fieldに代入して疑似的なフィールドを作る。
+        int area = height * width;
+        int field[] = new int[area];
+
+        // ブロックが落ちる処理。
+        // 0は何もない。1ならブロックがある。
+        for (int a = 0; a < N; a++) {
+        	System.out.print(a + 1 + "個目のブロックのタテ幅は：");
+            int heightBlock = sc.nextInt();
+            System.out.print(a + 1 + "個目のブロックのヨコ幅は：");
+            int widthBlock = sc.nextInt();
+            System.out.print("左端からブロックまでの距離は：");
+            int distance = sc.nextInt();
+
+            block(field, height, width, area, heightBlock, widthBlock, distance);
+            output(field, width);
+            System.out.println("");
+
+        }
+
+        //最終的な出力
+        //output(field, width);
+
+    }
+
+    public static void block(int[] field, int height, int width, int area, int heightBlock, int widthBlock, int distance) {
+        // areaの数だけ繰り返す処理。
+        int noBlock = 0;
+
+        for (int i = 0; i < area; i++) {
+
+            // ブロックが落ちない場所の判定をスキップする処理
+            if (i < ((i / width) * width) + distance) {
+                // ブロックが通過するエリアより左側のフィールド
+                continue;
+            } else if (i >= ((i / width) * width) + distance + widthBlock) {
+                // ブロックが通過するエリアより右側のフィールド
+                continue;
+            }
+
+
+            if (field[i] == 1) {
+                // ブロックの上にブロックが重なる。落ちきる途中でブロックを検出した場合。
+                kasanaruBlock(field, heightBlock, widthBlock, i, distance, width, height);
+                break;
+            } else if (field[i] == 0) {
+                // 検出しても何も無かった場合noBlockに1を足す。
+            	noBlock++;
+            	if (widthBlock * height == noBlock) {
+            		// 床にブロックが落ちる。落ちきるまでブロックが検出されなかった場合。
+            		otiruBlock(field, heightBlock, widthBlock, i, distance, width, height);
+            		break;
+            	}
+
+            }
+
+        }
+    }
+
+    public static void kasanaruBlock(int[] field, int heightBlock, int widthBlock, int i, int distance, int width, int height) {
+
+        int q = 0;
+
+        for (int m = 0; m < heightBlock; m++) {
+
+            for (int u = 0; u < widthBlock; u++) {
+                field[((i / (width)) * width) - width + distance + q + u] = 1;
+
+            }
+
+            q -= width;
+
+        }
+
+    }
+
+    public static void otiruBlock(int[] field, int heightBlock, int widthBlock, int i, int distance, int width, int height) {
+
+        int p = 0;
+
+        for (int x = 0; x < heightBlock; x++) {
+
+            for (int b = 0; b < widthBlock; b++) {
+                field[(width * (height - 1)) + distance + b + p] = 1;
+            }
+
+            p -= width;
+
+        }
+
+    }
+
+    public static void output(int[] field, int width) {
+        for (int k = 0; k < field.length; k++) {
+            // 0と1の配列をもとに、最終的に文字列を出力する
+            if (field[k] == 0) {
+                System.out.print(".");
+            } else {
+                System.out.print("#");
+            }
+
+            // 改行するためのif文
+            if ((k + 1) % width == 0) {
+                System.out.println("");
+            }
+        }
+    }
+
+
+}
