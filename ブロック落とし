@@ -34,9 +34,6 @@ public class Sample001 {
         	int heightPlusWidth = sc.nextInt();
             int heightBlock = 1 + r.nextInt(heightPlusWidth - 1);
             int widthBlock = heightPlusWidth - heightBlock;
-            int distance = 1 + r.nextInt(width - widthBlock);
-        	System.out.println("落ちたブロックのサイズは" + heightBlock + "×" + widthBlock + "、左端からの距離は" + distance + "でした");
-
             
             // 落ちるブロックがフィールドに入り切らない場合。
             if (widthBlock > width) {
@@ -46,6 +43,12 @@ public class Sample001 {
             	System.out.println("\nブロックの高さがフィールドを超えました。ゲームオーバーです。");
             	break;
             }
+            
+            int distance = 1 + r.nextInt(width - widthBlock);
+        	System.out.println("落ちたブロックのサイズは" + heightBlock + "×" + widthBlock + "、左端からの距離は" + distance + "でした");
+
+            
+            
             
             // blockメソッドでブロックが落ちる処理をする
             try {
