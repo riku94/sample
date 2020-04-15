@@ -1,41 +1,40 @@
 import java.util.Random;
 import java.util.Scanner;
 
-public class Sample001 {
+public class Main {
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+    	Scanner sc = new Scanner(System.in);
         Random r = new Random();
 
+        // heightはゲームフィールドのタテ幅、widthはヨコ幅、areaはフィールドのマス目の数、Nはブロックの個数
         int height = 13;
         int width = 10;
         int N = 10;
-        
-        // areaはタテ×ヨコでフィールドの面積
-        // それを配列fieldに代入して疑似的なゲームのフィールドを作る
         int area = height * width;
-        int field[] = new int[area];
-        
+
+        // 二次元配列fieldをゲームフィールドとして扱う
+        int field[][] = new int[height][width];
         System.out.println("ルール説明:");
         System.out.println(height + "×" + width + "マスのフィールドにブロックが" + N + "個落ちます。");
         System.out.println("フィールドの面積の半分以上をブロックで埋められたらクリアですが、");
         System.out.println("積み上がったブロックがフィールドの高さを超えたらゲームオーバーです。");
         System.out.println("ブロックのタテヨコの長さの合計だけは指定できますが、それ以外はランダムに決まります。");
-        
-        // 一旦空のフィールドを表示する
-        output(field, width);
 
-        // ブロックが落ちる処理
+        // いったん何もないゲームフィールドを表示する
+        output(field, height, width);
+
+        // 受け取った数値からブロックを生成し、フィールドに落とす処理
         // 0は何もない。1ならブロックがある
         for (int a = 0; a < N; a++) {
-        	
         	System.out.println("あと" + (N - a) + "個");
         	System.out.print("タテ幅とヨコ幅の合計を入力:");
-        	
+
+        	// 入力した数値heightPlusWidthをもとに、ブロックのタテ幅ヨコ幅をランダムに決める
         	int heightPlusWidth = sc.nextInt();
             int heightBlock = 1 + r.nextInt(heightPlusWidth - 1);
             int widthBlock = heightPlusWidth - heightBlock;
-            
-            // 落ちるブロックがフィールドに入り切らない場合。
+
+            // 生成したブロックがフィールドのタテヨコいずれかを超えてしまった場合、ゲームオーバーになる。
             if (widthBlock > width) {
             	System.out.println("\nブロックの横幅がフィールドを超えました。ゲームオーバーです。");
             	break;
@@ -43,131 +42,124 @@ public class Sample001 {
             	System.out.println("\nブロックの高さがフィールドを超えました。ゲームオーバーです。");
             	break;
             }
-            
+
+            // フィールドの左端からブロックまでの距離をランダムに決めるが、フィールドにブロックが収まるよう距離を調整する
             int distance = 1 + r.nextInt(width - widthBlock);
         	System.out.println("落ちたブロックのサイズは" + heightBlock + "×" + widthBlock + "、左端からの距離は" + distance + "でした");
 
-            // blockメソッドでブロックが落ちる処理をする
+            // blockメソッドでブロックを落とす処理をする
             try {
-            	block(field, height, width, area, heightBlock, widthBlock, distance);
+            	block(field, height, width, heightBlock, widthBlock, distance);
             } catch (ArrayIndexOutOfBoundsException e) {
-            	output(field, width);
+            	output(field, height, width);
             	System.out.println("\n積み上がったブロックがフィールドの高さを超えました。ゲームオーバーです。");
             	break;
             }
-            
+
             // ブロックを落とすたびにフィールドの状態を出力する
-            output(field, width);
-            
-            // N回ブロックを落とし切れたら結果発表をする
+            output(field, height, width);
+
+            // N回ブロックが落ちたら結果発表をする
             if (a == N - 1) {
-                gameResult(field, area);
-
+                gameResult(field, height, width, area);
             }
-            
         }
-
     }
 
-    public static void block(int[] field, int height, int width, int area, int heightBlock, int widthBlock, int distance) {
-        // 検出しても何も無かった場合noBlockに1を足す。
+    // ブロックが落ちる予定の部分を一つずつ判定するメソッド
+    public static void block(int[][] field, int height, int width, int heightBlock, int widthBlock, int distance) {
+    	// 配列を一つずつ判定してブロックが無かったらnoBlockに1を足す
+    	// otiruBlockメソッド発動の条件として使う
         int noBlock = 0;
-        
-        // areaの数だけ繰り返す処理。
-        for (int i = 0; i < area; i++) {
 
-            // ブロックが落ちない場所の判定をスキップする処理
-            if (i < ((i / width) * width) + distance) {
-                // ブロックが通過するエリアより左側のフィールド
-                continue;
-            } else if (i >= ((i / width) * width) + distance + widthBlock) {
-                // ブロックが通過するエリアより右側のフィールド
-                continue;
-            }
+    	outside: for (int h = 0; h < height; h++) {
+    		for (int w = 0; w < width; w++) {
+    			// ブロックが落ちない場所の判定をスキップする処理
+    			if (w < distance) {
+                    // ブロックが通過するエリアより左側のフィールド
+    				continue;
+    			} else if (distance + widthBlock - 1 < w) {
+                    // ブロックが通過するエリアより右側のフィールド
+    				continue;
+    			}
 
+    			// ブロックを落とす処理
+    			if (field[h][w] == 1) {
+    				// 途中でブロックを検出したらkasanaruBlockを発動させてブロックを重ねる
+    				kasanaruBlock(field, heightBlock, widthBlock, distance, h);
+    				break outside;
+    			} else if (field[h][w] == 0) {
+    				//配列を一つずつ判定してブロックが無かったのでnoBlockに1を足す
+    				noBlock++;
+                	if (widthBlock * height == noBlock) {
+                		// 落ちきるまでブロックが検出されなかったのでotiruBlockを発動させてブロックを置く
+                		otiruBlock(field, heightBlock, widthBlock, distance, height);
+                		break;
+                	}
+    			}
+    		}
+    	}
+    }
 
-            if (field[i] == 1) {
-                // ブロックの上にブロックが重なるメソッド。落ちきる途中でブロックを検出した場合。
-                kasanaruBlock(field, heightBlock, widthBlock, i, distance, width, height);
-                break;
-            } else if (field[i] == 0) {
-            	noBlock++;
-            	if (widthBlock * height == noBlock) {
-            		// 床にブロックが落ちるメソッド。落ちきるまでブロックが検出されなかった場合。
-            		otiruBlock(field, heightBlock, widthBlock, i, distance, width, height);
-            		break;
-            	}
+    // ブロックの上にブロックが重なるメソッド。落ちきる途中でブロックを検出した場合
+    public static void kasanaruBlock(int[][] field, int heightBlock, int widthBlock, int distance, int h) {
 
-            }
-
+        // 二次元配列fieldのブロックが重なる箇所に1を代入する
+    	for (int a = 0; a < heightBlock; a++) {
+        	for (int b = 0; b < widthBlock; b++) {
+        		field[h - 1 - a][distance + b] = 1;
+        	}
         }
     }
 
-    
-    public static void kasanaruBlock(int[] field, int heightBlock, int widthBlock, int i, int distance, int width, int height) {
+    // 床にブロックが落ちるメソッド。落ちきるまでブロックが一つも検出されなかった場合
+    public static void otiruBlock(int[][] field, int heightBlock, int widthBlock, int distance, int height) {
 
-        int q = 0;
-
-        for (int m = 0; m < heightBlock; m++) {
-
-            for (int u = 0; u < widthBlock; u++) {
-                field[((i / (width)) * width) - width + distance + q + u] = 1;
-
-            }
-
-            q -= width;
-
+    	// 二次元配列fieldのブロックが落ちる箇所に1を代入する
+    	for (int a = 0; a < heightBlock; a++) {
+        	for (int b = 0; b < widthBlock; b++) {
+        		field[height - 1 - a][distance + b] = 1;
+        	}
         }
-
     }
 
-    public static void otiruBlock(int[] field, int heightBlock, int widthBlock, int i, int distance, int width, int height) {
+    // 0と1で構成されたフィールドを文字列として出力するメソッド
+    public static void output(int[][] field, int height, int width) {
+    	for (int h = 0; h < height; h++) {
+    		for (int w = 0; w < width; w++) {
+    			if (field[h][w] == 0) {
+    				System.out.print(".");
+    			} else {
+    				System.out.print("#");
+    			}
+    		}
 
-        int p = 0;
+    		// 改行
+    		System.out.println("");
+    	}
 
-        for (int x = 0; x < heightBlock; x++) {
-
-            for (int b = 0; b < widthBlock; b++) {
-                field[(width * (height - 1)) + distance + b + p] = 1;
-            }
-
-            p -= width;
-
-        }
-
-    }
-
-    public static void output(int[] field, int width) {
-        for (int k = 0; k < field.length; k++) {
-            // 0と1の配列をもとに、最終的に文字列を出力する
-            if (field[k] == 0) {
-                System.out.print(".");
-            } else {
-                System.out.print("#");
-            }
-
-            // 改行するためのif文
-            if ((k + 1) % width == 0) {
-                System.out.println("");
-            }
-        }
-        
         System.out.println("-----------------------------------\n");
     }
-    
-    public static void gameResult(int[] field, int area) {
+
+    // ゲームの結果を発表するメソッド
+    // クリア条件はブロックを全て落としたときにフィールドの半分以上がブロックで埋められている場合
+    public static void gameResult(int[][] field, int height, int width, int area) {
         int sumBlock = 0;
-    	for (int k = 0; k < field.length; k++) {
-            sumBlock += field[k];
-        }
+
+    	for (int h = 0; h < height; h++) {
+    		for (int w = 0; w < width; w++) {
+    			if (field[h][w] == 1) {
+    				sumBlock++;
+    			}
+    		}
+    	}
+
     	double half = area / 2;
+
     	if (sumBlock > half) {
     		System.out.println(area + "マス中" + sumBlock + "個がブロックです。\n半分以上埋められたのでクリアです！");
     	} else {
     		System.out.println(area + "マス中" + sumBlock + "個がブロックです。\n半分以上埋められていないのでゲームオーバーです。");
     	}
-        
     }
-
-
 }
